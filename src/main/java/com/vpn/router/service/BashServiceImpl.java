@@ -38,20 +38,9 @@ public class BashServiceImpl implements BashService {
         }
     }
 
-    @SneakyThrows
-    public void write(@NonNull String domain, Set<String> routes) {
-        String ips = String.join("\n", routes);
-        Files.write(
-                Paths.get(
-                        format("./%s_routes", domain
-                                .replace("www.", "")
-                                .replace(".", "_")
-                        )
-                ), ips.getBytes());
-    }
-
     @Override
-    public Set<String> findIpsByDomainName(@NonNull String domain) {
+    public Set<String> findIpsByDomainName(@NonNull String domainName) {
+        String domain = domainName.replace("www.", "");
         long before = System.currentTimeMillis();
         Set<String> routes = getAddressesByDomain(domain)
                 .stream()
@@ -63,6 +52,15 @@ public class BashServiceImpl implements BashService {
         write(domain, routes);
         System.out.println((System.currentTimeMillis() - before) / 1000);
         return routes;
+    }
+
+    @SneakyThrows
+    public void write(@NonNull String domain, @NonNull Set<String> routes) {
+        String ips = String.join("\n", routes);
+        Files.write(
+                Paths.get(format(
+                        "./%s_routes", domain.replace(".", "_"))
+                ), ips.getBytes());
     }
 
     public Set<String> getAddressesByDomain(@NonNull String domain) {
