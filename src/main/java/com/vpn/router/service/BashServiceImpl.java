@@ -52,7 +52,8 @@ public class BashServiceImpl implements BashService {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
         write(domain, routes);
-        System.out.println((System.currentTimeMillis() - before) / 1000);
+        log.debug("Domain: {}, has {} routes, evaluated in {} sec", domainName,
+                routes.size(), (System.currentTimeMillis() - before) / 1000);
         return routes;
     }
 
@@ -88,7 +89,8 @@ public class BashServiceImpl implements BashService {
         Path path = Paths.get(tmpFile);
         Set<String> ips = new HashSet<>();
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            reader.lines().forEach(item -> ips.add(item.replace("route:", "").trim()));
+            reader.lines().forEach(item ->
+                    ips.add(item.replace("route:", "").trim()));
         }
         Files.delete(path);
         return ips;
@@ -97,14 +99,12 @@ public class BashServiceImpl implements BashService {
     @SneakyThrows
     public Set<String> executeBashCommand(@NonNull String command) {
         Set<String> result;
-        String[] commands = {"bash", "-c", command};
-        Process process = Runtime.getRuntime().exec(commands);
+        Process process = Runtime.getRuntime()
+                .exec(new String[] {"bash", "-c", command});
         process.waitFor();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream()))) {
-            result = reader.lines()
-                    .map(line-> format("%s\n", line))
-                    .collect(Collectors.toSet());
+            result = reader.lines().collect(Collectors.toSet());
         }
         if (result.isEmpty() && !command.contains(">>")) {
             throw new BashExecutionException();
