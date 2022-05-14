@@ -47,10 +47,8 @@ public class BashServiceImpl implements BashService {
         Set<String> routes = getAddressesByDomain(domain)
                 .stream()
                 .map(this::getAutonomousSystem)
-                .peek(System.out::println)
                 .flatMap(Collection::stream)
                 .map(as -> getRoute(domain, as))
-                .peek(System.out::println)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
         write(domain, routes);
