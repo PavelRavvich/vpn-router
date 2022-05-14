@@ -13,12 +13,10 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -28,6 +26,10 @@ public class BashServiceImpl implements BashService {
 
     @Value("${fs.as-tmp-dir}")
     private String tmpDir;
+
+    private final static String HOST_CMD = "host %s";
+    private final static String AUTONOMOUS_SYSTEM_CMD = "whois -h whois.radb.net %s";
+    private final static String IPS_CMD = "whois -h whois.radb.net -- -i origin -T route %s | grep 'route:' >> %s";
 
     @SneakyThrows
     @PostConstruct
@@ -66,18 +68,16 @@ public class BashServiceImpl implements BashService {
     }
 
     public Set<String> getAddressesByDomain(@NonNull String domain) {
-        String resp = executeBashCommand(format("host %s", domain));
         String pattern = format("%s has address", domain);
-        return Stream.of(resp.split("\n"))
+        return executeBashCommand(format(HOST_CMD, domain)).stream()
                 .filter(item -> !item.contains("IPv6"))
                 .map(item -> item.replace(pattern, "").trim())
                 .collect(Collectors.toSet());
     }
 
     public Set<String> getAutonomousSystem(@NonNull String ipAddress) {
-        String cmd = format("whois -h whois.radb.net %s", ipAddress);
-        String resp = executeBashCommand(cmd);
-        return Arrays.stream(resp.split("\n"))
+        return executeBashCommand(format(AUTONOMOUS_SYSTEM_CMD, ipAddress))
+                .stream()
                 .filter(line -> line.contains("AS") && line.contains("origin"))
                 .map(line -> line.replace("origin:", "").trim())
                 .collect(Collectors.toSet());
@@ -86,8 +86,7 @@ public class BashServiceImpl implements BashService {
     @SneakyThrows
     public Set<String> getRoute(@NonNull String domain, @NonNull String as) {
         String tmpFile = format("%s/%s-%s.txt", tmpDir, domain, as);
-        String cmd = format("whois -h whois.radb.net -- -i origin -T route %s | grep 'route:' >> %s", as, tmpFile);
-        executeBashCommand(cmd);
+        executeBashCommand(format(IPS_CMD, as, tmpFile));
         Path path = Paths.get(tmpFile);
         Set<String> ips = new HashSet<>();
         try (BufferedReader reader = Files.newBufferedReader(path)) {
@@ -98,8 +97,8 @@ public class BashServiceImpl implements BashService {
     }
 
     @SneakyThrows
-    public String executeBashCommand(@NonNull String command) {
-        String result;
+    public Set<String> executeBashCommand(@NonNull String command) {
+        Set<String> result;
         String[] commands = {"bash", "-c", command};
         Process process = Runtime.getRuntime().exec(commands);
         process.waitFor();
@@ -107,9 +106,9 @@ public class BashServiceImpl implements BashService {
                 new InputStreamReader(process.getInputStream()))) {
             result = reader.lines()
                     .map(line-> format("%s\n", line))
-                    .collect(Collectors.joining());
+                    .collect(Collectors.toSet());
         }
-        if (result.isBlank() && !command.contains(">>")) {
+        if (result.isEmpty() && !command.contains(">>")) {
             throw new BashExecutionException();
         }
         return result;
