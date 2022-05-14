@@ -45,8 +45,10 @@ public class BashServiceImpl implements BashService {
         Set<String> routes = getAddressesByDomain(domain)
                 .stream()
                 .map(this::getAutonomousSystem)
+                .peek(System.out::println)
                 .flatMap(Collection::stream)
                 .map(as -> getRoute(domain, as))
+                .peek(System.out::println)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
         write(domain, routes);
@@ -84,7 +86,7 @@ public class BashServiceImpl implements BashService {
     @SneakyThrows
     public Set<String> getRoute(@NonNull String domain, @NonNull String as) {
         String tmpFile = format("%s/%s-%s.txt", tmpDir, domain, as);
-        String cmd = format("whois -h whois.radb.net -- -i origin -T route %s | grep 'route' >> %s", as, tmpFile);
+        String cmd = format("whois -h whois.radb.net -- -i origin -T route %s | grep 'route:' >> %s", as, tmpFile);
         executeBashCommand(cmd);
         Path path = Paths.get(tmpFile);
         Set<String> ips = new HashSet<>();
