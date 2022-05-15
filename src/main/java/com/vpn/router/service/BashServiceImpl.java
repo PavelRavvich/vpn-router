@@ -46,7 +46,7 @@ public class BashServiceImpl implements BashService {
 
     @Override
     @SneakyThrows
-    public List<Route> getRoutesByHost(@NonNull Host host) {
+    public List<String> getRoutesByHost(@NonNull Host host) {
         Set<String> addresses = getAddressesByHost(host.getHostname());
         log.debug("Host: {}, has {} routes", host.getHostname(), addresses.size());
         updateVpnConfig(host.getHostname(), addresses);
@@ -56,12 +56,7 @@ public class BashServiceImpl implements BashService {
                 .flatMap(Collection::stream)
                 .map(as -> getRoute(host.getHostname(), as))
                 .flatMap(Collection::stream)
-                .map(address -> Route.builder()
-                        .address(address)
-                        .createdAt(now)
-                        .host(host)
-                        .build()
-                ).collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @SneakyThrows

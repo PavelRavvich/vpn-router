@@ -8,7 +8,7 @@ import java.util.Set;
 
 public interface BashService {
 
-    List<Route> getRoutesByHost(Host host);
+    List<String> getRoutesByHost(Host host);
 
     Set<String> executeBashCommand(String cmd);
 }

@@ -3,6 +3,7 @@ package com.vpn.router.service;
 import com.vpn.router.dto.HostDto;
 import com.vpn.router.mapper.HostMapper;
 import com.vpn.router.model.Host;
+import com.vpn.router.model.Route;
 import com.vpn.router.repository.HostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -43,9 +44,10 @@ public class HostServiceImpl implements HostService {
 
     @Override
     @SneakyThrows
-    @Transactional
     public void create(@NotNull String url) {
-        String hostname = new URI(url).getHost();
+        String hostname = new URI(url)
+                .getHost()
+                .replace("www.", "");
         Timestamp now = new Timestamp(System.currentTimeMillis());
         Host host = hostRepository.save(
                 Host.builder()
@@ -53,7 +55,9 @@ public class HostServiceImpl implements HostService {
                         .isEnabled(true)
                         .hostname(hostname)
                         .build());
-        routeService.saveAll(bashService.getRoutesByHost(host));
+
+        List<String> routes = bashService.getRoutesByHost(host);
+        routeService.saveAll(hostMapper.addressToRoute(routes, host));
     }
 
     @Override
@@ -62,8 +66,10 @@ public class HostServiceImpl implements HostService {
         Host host = hostRepository
                 .findById(hostId)
                 .orElseThrow(NoSuchElementException::new);
+        List<String> addresses = bashService.getRoutesByHost(host);
+        List<Route> routes = hostMapper.addressToRoute(addresses, host);
         routeService.deleteAllByHost(host);
-        routeService.saveAll(bashService.getRoutesByHost(host));
+        routeService.saveAll(routes);
         hostRepository.updateIsEnabled(hostId, true, new Timestamp(System.currentTimeMillis()));
     }
 
