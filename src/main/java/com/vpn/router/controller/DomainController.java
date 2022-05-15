@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping
 @RequiredArgsConstructor
-public class VpnController {
+public class DomainController {
 
     private final DomainService domainService;
 
