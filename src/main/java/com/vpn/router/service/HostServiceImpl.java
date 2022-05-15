@@ -3,9 +3,7 @@ package com.vpn.router.service;
 import com.vpn.router.dto.HostDto;
 import com.vpn.router.mapper.HostMapper;
 import com.vpn.router.model.Host;
-import com.vpn.router.model.Route;
 import com.vpn.router.repository.HostRepository;
-import com.vpn.router.repository.RouteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +27,7 @@ public class HostServiceImpl implements HostService {
 
     private final HostRepository hostRepository;
 
-    private final RouteRepository routeRepository;
+    private final RouteService routeService;
 
     private final BashService bashService;
 
@@ -51,38 +49,22 @@ public class HostServiceImpl implements HostService {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         Host host = hostRepository.save(
                 Host.builder()
-                        .isEnabled(true)
                         .createdAt(now)
+                        .isEnabled(true)
                         .hostname(hostname)
                         .build());
-        List<Route> routes = bashService.fetchRoutes(hostname).stream()
-                .map(route -> Route.builder()
-                        .createdAt(now)
-                        .address(route)
-                        .host(host)
-                        .build()
-                ).collect(Collectors.toList());
-        routeRepository.saveAll(routes);
+        routeService.saveAll(bashService.getRoutesByHost(host));
     }
 
     @Override
-    public void updateRoutes(@NotNull Long id) {
+    @Transactional
+    public void updateRoutesByHostId(@NotNull Long hostId) {
         Host host = hostRepository
-                .findById(id)
+                .findById(hostId)
                 .orElseThrow(NoSuchElementException::new);
-
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        List<Route> routes = bashService
-                .fetchRoutes(host.getHostname())
-                .stream()
-                .map(address -> Route.builder()
-                        .address(address)
-                        .createdAt(now)
-                        .host(host)
-                        .build()
-                ).collect(Collectors.toList());
-        routeRepository.deleteByHost(host);
-        routeRepository.saveAll(routes);
+        routeService.deleteAllByHost(host);
+        routeService.saveAll(bashService.getRoutesByHost(host));
+        hostRepository.updateIsEnabled(hostId, true, new Timestamp(System.currentTimeMillis()));
     }
 
     @Override
@@ -95,9 +77,15 @@ public class HostServiceImpl implements HostService {
         hostRepository.updateIsEnabled(id, true, new Timestamp(System.currentTimeMillis()));
     }
 
-    @SneakyThrows
+
     @Override
+    @SneakyThrows
+    @Transactional
     public void delete(@NotNull String url) {
-        hostRepository.deleteByHostname(new URI(url).getHost());
+        URI uri = new URI(url);
+        Host host = hostRepository
+                .findTopByHostname(uri.getHost())
+                .orElseThrow(NoSuchElementException::new);
+        hostRepository.deleteById(host.getId());
     }
 }

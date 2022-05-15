@@ -12,7 +12,7 @@ public interface HostService {
 
     void delete(String url);
 
-    void updateRoutes(Long id);
+    void updateRoutesByHostId(Long id);
 
     void disable(Long id);
 

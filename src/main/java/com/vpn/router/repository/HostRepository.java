@@ -10,15 +10,18 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
+import java.util.Optional;
 
 @Repository
 @Transactional
 public interface HostRepository
         extends JpaRepository<Host, Long>, JpaSpecificationExecutor<Host> {
 
+    Optional<Host> findTopByHostname(@NotNull String hostname);
+
     @EntityGraph(attributePaths = {"routes"})
-    void deleteByHostname(@NotNull String name);
+    void deleteById(@NotNull Long id);
 
     @Query("UPDATE Host h SET h.isEnabled = :isEnabled, h.updatedAt = :updatedAt WHERE h.id = :id")
-    void updateIsEnabled(Long id, Boolean isEnabled, Timestamp updatedAt);
+    void updateIsEnabled(@NotNull Long id, @NotNull Boolean isEnabled, @NotNull Timestamp updatedAt);
 }

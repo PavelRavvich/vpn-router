@@ -35,7 +35,7 @@ public class HostController {
 
     @PostMapping("/update")
     public ResponseEntity<Void> updateRoutes(@NotNull @RequestBody Map<String, Long> request) {
-        hostService.updateRoutes(request.get("id"));
+        hostService.updateRoutesByHostId(request.get("id"));
         return ResponseEntity.ok().build();
     }
 

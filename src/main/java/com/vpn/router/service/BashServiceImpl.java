@@ -1,5 +1,7 @@
 package com.vpn.router.service;
 
+import com.vpn.router.model.Host;
+import com.vpn.router.model.Route;
 import com.vpn.router.validation.BashExecutionException;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -10,10 +12,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +37,7 @@ public class BashServiceImpl implements BashService {
 
     @SneakyThrows
     @PostConstruct
-    public void createTmpAsDir() {
+    public void createTmpAutonomousSystemDir() {
         Path path = Paths.get(tmpDir);
         if (Files.notExists(path)) {
             Files.createDirectory(path);
@@ -44,24 +46,26 @@ public class BashServiceImpl implements BashService {
 
     @Override
     @SneakyThrows
-    public List<String> fetchRoutes(@NonNull String hostname) {
-        String host = new URL(hostname).getHost();
-        long before = System.currentTimeMillis();
-        Set<String> routes = getAddressesByHost(host)
-                .stream()
+    public List<Route> getRoutesByHost(@NonNull Host host) {
+        Set<String> addresses = getAddressesByHost(host.getHostname());
+        log.debug("Host: {}, has {} routes", host.getHostname(), addresses.size());
+        updateVpnConfig(host.getHostname(), addresses);
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        return addresses.stream()
                 .map(this::getAutonomousSystem)
                 .flatMap(Collection::stream)
-                .map(as -> getRoute(host, as))
+                .map(as -> getRoute(host.getHostname(), as))
                 .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-        write(host, routes);
-        log.debug("Host: {}, has {} routes, evaluated in {} sec", hostname,
-                routes.size(), (System.currentTimeMillis() - before) / 1000);
-        return List.copyOf(routes);
+                .map(address -> Route.builder()
+                        .address(address)
+                        .createdAt(now)
+                        .host(host)
+                        .build()
+                ).collect(Collectors.toList());
     }
 
     @SneakyThrows
-    public void write(@NonNull String host, @NonNull Set<String> routes) {
+    public void updateVpnConfig(@NonNull String host, @NonNull Set<String> routes) {
         String ips = String.join("\n", routes);
         Files.write(
                 Paths.get(format(
@@ -99,6 +103,7 @@ public class BashServiceImpl implements BashService {
         return ips;
     }
 
+    @Override
     @SneakyThrows
     public Set<String> executeBashCommand(@NonNull String command) {
         Set<String> result;

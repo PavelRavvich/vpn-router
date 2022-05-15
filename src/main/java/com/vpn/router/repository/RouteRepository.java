@@ -8,14 +8,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
-import java.util.List;
 
 @Repository
 @Transactional
 public interface RouteRepository extends JpaRepository<Route, Long>, JpaSpecificationExecutor<Route> {
 
-    List<Route> findAllByHost(@NotNull Host host);
-
-    void deleteByHost(@NotNull Host host);
-
+    void deleteAllByHost(@NotNull Host host);
 }
