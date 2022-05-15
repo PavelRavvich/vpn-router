@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,7 @@ public class BashServiceImpl implements BashService {
     }
 
     @Override
-    public Set<String> findIpsByDomainName(@NonNull String domainName) {
+    public List<String> fetchRoutes(@NonNull String domainName) {
         String domain = domainName.replace("www.", "");
         long before = System.currentTimeMillis();
         Set<String> routes = getAddressesByDomain(domain)
@@ -54,7 +55,7 @@ public class BashServiceImpl implements BashService {
         write(domain, routes);
         log.debug("Domain: {}, has {} routes, evaluated in {} sec", domainName,
                 routes.size(), (System.currentTimeMillis() - before) / 1000);
-        return routes;
+        return List.copyOf(routes);
     }
 
     @SneakyThrows

@@ -1,26 +1,60 @@
 package com.vpn.router.controller;
 
-import com.vpn.router.service.BashService;
+import com.vpn.router.dto.DomainRequest;
+import com.vpn.router.dto.DomainResponse;
+import com.vpn.router.dto.IdRequest;
+import com.vpn.router.service.DomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @RestController
-@RequestMapping("/vpn")
+@RequestMapping
 @RequiredArgsConstructor
 public class VpnController {
 
-    private final BashService bashService;
+    private final DomainService domainService;
 
-    @GetMapping
-    public ResponseEntity<Set<String>> updateRoute(
-            @RequestParam(name = "domain") String domain,
-            @RequestParam(name = "isEnabled") Boolean isEnabled) {
-        return ResponseEntity.ok(bashService.findIpsByDomainName(domain));
+    @GetMapping("/domainList")
+    public ResponseEntity<List<DomainResponse>> list() {
+        return ResponseEntity.ok(domainService.list());
+    }
+
+    @PostMapping("/createDomain")
+    public ResponseEntity<Void> create(@NotNull @RequestBody @Valid DomainRequest request) {
+        domainService.create(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/updateRoutes")
+    public ResponseEntity<Void> updateRoutes(@NotNull @RequestBody @Valid IdRequest request) {
+        domainService.updateRoutes(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/disableDomain")
+    public ResponseEntity<Void> disable(@NotNull @RequestBody @Valid IdRequest request) {
+        domainService.disable(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/enableDomain")
+    public ResponseEntity<Void> enable(@NotNull @RequestBody @Valid IdRequest request) {
+        domainService.enable(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/deleteDomain")
+    public ResponseEntity<Void> delete(@NotNull @RequestBody @Valid DomainRequest request) {
+        domainService.delete(request);
+        return ResponseEntity.ok().build();
     }
 }

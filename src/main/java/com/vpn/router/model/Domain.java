@@ -19,9 +19,6 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * @author Pavel Ravvich.
- */
 @Getter
 @Setter
 @Entity
@@ -36,8 +33,8 @@ public class Domain {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title")
-    private String title;
+    @Column(name = "name")
+    private String name;
 
     @Column(name = "is_enabled")
     private Boolean isEnabled;
@@ -45,12 +42,12 @@ public class Domain {
     @Column(name = "created_at")
     private Timestamp createdAt;
 
-    @Column(name = "deleted_at")
-    private Timestamp deletedAt;
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
 
     @ToString.Exclude
     @OneToMany(mappedBy="domain", fetch = FetchType.LAZY)
-    private List<Host> hosts;
+    private List<Route> routes;
 
     @Override
     public boolean equals(Object o) {
@@ -60,19 +57,19 @@ public class Domain {
         Domain domain = (Domain) o;
 
         if (!Objects.equals(id, domain.id)) return false;
-        if (!Objects.equals(title, domain.title)) return false;
+        if (!Objects.equals(name, domain.name)) return false;
         if (!Objects.equals(isEnabled, domain.isEnabled)) return false;
         if (!Objects.equals(createdAt, domain.createdAt)) return false;
-        return Objects.equals(deletedAt, domain.deletedAt);
+        return Objects.equals(updatedAt, domain.updatedAt);
     }
 
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (isEnabled != null ? isEnabled.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
-        result = 31 * result + (deletedAt != null ? deletedAt.hashCode() : 0);
+        result = 31 * result + (updatedAt != null ? updatedAt.hashCode() : 0);
         return result;
     }
 }

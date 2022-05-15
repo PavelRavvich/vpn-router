@@ -1,8 +1,7 @@
-CREATE TABLE IF NOT EXISTS ips
+CREATE TABLE IF NOT EXISTS routes
 (
     id         BIGSERIAL PRIMARY KEY,
     address    VARCHAR(255) NOT NULL,
     created_at TIMESTAMP    NOT NULL,
-    deleted_at TIMESTAMP,
-    host_id    BIGINT REFERENCES hosts (id)
+    domain_id  BIGINT REFERENCES domains (id)
 );
