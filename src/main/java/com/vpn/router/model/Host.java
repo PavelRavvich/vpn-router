@@ -26,15 +26,15 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "domains")
-public class Domain {
+@Table(name = "hosts")
+public class Host {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "hostname")
+    private String hostname;
 
     @Column(name = "is_enabled")
     private Boolean isEnabled;
@@ -46,7 +46,7 @@ public class Domain {
     private Timestamp updatedAt;
 
     @ToString.Exclude
-    @OneToMany(mappedBy="domain", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy= "host", fetch = FetchType.LAZY)
     private List<Route> routes;
 
     @Override
@@ -54,19 +54,19 @@ public class Domain {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Domain domain = (Domain) o;
+        Host host = (Host) o;
 
-        if (!Objects.equals(id, domain.id)) return false;
-        if (!Objects.equals(name, domain.name)) return false;
-        if (!Objects.equals(isEnabled, domain.isEnabled)) return false;
-        if (!Objects.equals(createdAt, domain.createdAt)) return false;
-        return Objects.equals(updatedAt, domain.updatedAt);
+        if (!Objects.equals(id, host.id)) return false;
+        if (!Objects.equals(host, host.hostname)) return false;
+        if (!Objects.equals(isEnabled, host.isEnabled)) return false;
+        if (!Objects.equals(createdAt, host.createdAt)) return false;
+        return Objects.equals(updatedAt, host.updatedAt);
     }
 
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
         result = 31 * result + (isEnabled != null ? isEnabled.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
         result = 31 * result + (updatedAt != null ? updatedAt.hashCode() : 0);

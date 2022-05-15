@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface BashService {
 
-    List<String> fetchRoutes(String domain);
+    List<String> fetchRoutes(String hostname);
 }

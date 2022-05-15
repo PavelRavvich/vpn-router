@@ -40,7 +40,7 @@ public class Route {
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "domain_id")
-    private Domain domain;
+    @JoinColumn(name = "host_id")
+    private Host host;
 
 }

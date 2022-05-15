@@ -1,19 +1,19 @@
 package com.vpn.router.service;
 
-import com.vpn.router.dto.DomainRequest;
-import com.vpn.router.dto.DomainResponse;
-import com.vpn.router.dto.IdRequest;
-import com.vpn.router.mapper.DomainMapper;
-import com.vpn.router.model.Domain;
+import com.vpn.router.dto.HostDto;
+import com.vpn.router.mapper.HostMapper;
+import com.vpn.router.model.Host;
 import com.vpn.router.model.Route;
-import com.vpn.router.repository.DomainRepository;
+import com.vpn.router.repository.HostRepository;
 import com.vpn.router.repository.RouteRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.net.URI;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.List;
@@ -23,81 +23,81 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DomainServiceImpl implements DomainService {
+public class HostServiceImpl implements HostService {
 
-    private final DomainMapper domainMapper;
+    private final HostMapper hostMapper;
 
-    private final DomainRepository domainRepository;
+    private final HostRepository hostRepository;
 
     private final RouteRepository routeRepository;
 
     private final BashService bashService;
 
     @Override
-    public List<DomainResponse> list() {
-        return domainRepository
+    public List<HostDto> list() {
+        return hostRepository
                 .findAll()
                 .stream()
-                .map(domainMapper::domainToDomainResponse)
-                .sorted(Comparator.comparing(DomainResponse::getDomain))
+                .map(hostMapper::hostToHostDto)
+                .sorted(Comparator.comparing(HostDto::getHostname))
                 .collect(Collectors.toList());
     }
 
     @Override
+    @SneakyThrows
     @Transactional
-    public void create(@NotNull DomainRequest request) {
-        String name = request.getName().replace("www.", "");
+    public void create(@NotNull String url) {
+        String hostname = new URI(url).getHost();
         Timestamp now = new Timestamp(System.currentTimeMillis());
-        Domain domain = domainRepository.save(
-                Domain.builder()
+        Host host = hostRepository.save(
+                Host.builder()
                         .isEnabled(true)
                         .createdAt(now)
-                        .name(name)
+                        .hostname(hostname)
                         .build());
-        List<Route> routes = bashService
-                .fetchRoutes(name)
-                .stream()
+        List<Route> routes = bashService.fetchRoutes(hostname).stream()
                 .map(route -> Route.builder()
                         .createdAt(now)
                         .address(route)
-                        .domain(domain)
+                        .host(host)
                         .build()
                 ).collect(Collectors.toList());
         routeRepository.saveAll(routes);
     }
 
     @Override
-    public void updateRoutes(@NotNull IdRequest request) {
-        Domain domain = domainRepository
-                .findById(request.getId())
+    public void updateRoutes(@NotNull Long id) {
+        Host host = hostRepository
+                .findById(id)
                 .orElseThrow(NoSuchElementException::new);
 
         Timestamp now = new Timestamp(System.currentTimeMillis());
         List<Route> routes = bashService
-                .fetchRoutes(domain.getName())
+                .fetchRoutes(host.getHostname())
                 .stream()
                 .map(address -> Route.builder()
                         .address(address)
                         .createdAt(now)
-                        .domain(domain)
+                        .host(host)
                         .build()
                 ).collect(Collectors.toList());
-        routeRepository.deleteByDomain(domain);
+        routeRepository.deleteByHost(host);
         routeRepository.saveAll(routes);
     }
 
     @Override
-    public void disable(@NotNull IdRequest request) {
-        domainRepository.updateIsEnabled(request.getId(), false, new Timestamp(System.currentTimeMillis()));
+    public void disable(@NotNull Long id) {
+        hostRepository.updateIsEnabled(id, false, new Timestamp(System.currentTimeMillis()));
     }
 
     @Override
-    public void enable(@NotNull IdRequest request) {
-        domainRepository.updateIsEnabled(request.getId(), true, new Timestamp(System.currentTimeMillis()));
+    public void enable(@NotNull Long id) {
+        hostRepository.updateIsEnabled(id, true, new Timestamp(System.currentTimeMillis()));
     }
 
+    @SneakyThrows
     @Override
-    public void delete(@NotNull DomainRequest request) {
-        domainRepository.deleteByName(request.getName());
+    public void delete(@NotNull String url) {
+        hostRepository.deleteByHostname(new URI(url).getHost());
     }
 }

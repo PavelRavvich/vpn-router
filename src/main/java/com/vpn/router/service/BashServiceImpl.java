@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,34 +43,35 @@ public class BashServiceImpl implements BashService {
     }
 
     @Override
-    public List<String> fetchRoutes(@NonNull String domainName) {
-        String domain = domainName.replace("www.", "");
+    @SneakyThrows
+    public List<String> fetchRoutes(@NonNull String hostname) {
+        String host = new URL(hostname).getHost();
         long before = System.currentTimeMillis();
-        Set<String> routes = getAddressesByDomain(domain)
+        Set<String> routes = getAddressesByHost(host)
                 .stream()
                 .map(this::getAutonomousSystem)
                 .flatMap(Collection::stream)
-                .map(as -> getRoute(domain, as))
+                .map(as -> getRoute(host, as))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
-        write(domain, routes);
-        log.debug("Domain: {}, has {} routes, evaluated in {} sec", domainName,
+        write(host, routes);
+        log.debug("Host: {}, has {} routes, evaluated in {} sec", hostname,
                 routes.size(), (System.currentTimeMillis() - before) / 1000);
         return List.copyOf(routes);
     }
 
     @SneakyThrows
-    public void write(@NonNull String domain, @NonNull Set<String> routes) {
+    public void write(@NonNull String host, @NonNull Set<String> routes) {
         String ips = String.join("\n", routes);
         Files.write(
                 Paths.get(format(
-                        "./%s_routes", domain.replace(".", "_"))
+                        "./%s_routes", host.replace(".", "_"))
                 ), ips.getBytes());
     }
 
-    public Set<String> getAddressesByDomain(@NonNull String domain) {
-        String pattern = format("%s has address", domain);
-        return executeBashCommand(format(HOST_CMD, domain)).stream()
+    public Set<String> getAddressesByHost(@NonNull String host) {
+        String pattern = format("%s has address", host);
+        return executeBashCommand(format(HOST_CMD, host)).stream()
                 .filter(item -> !item.contains("IPv6"))
                 .map(item -> item.replace(pattern, "").trim())
                 .collect(Collectors.toSet());
@@ -84,8 +86,8 @@ public class BashServiceImpl implements BashService {
     }
 
     @SneakyThrows
-    public Set<String> getRoute(@NonNull String domain, @NonNull String as) {
-        String tmpFile = format("%s/%s-%s.txt", tmpDir, domain, as);
+    public Set<String> getRoute(@NonNull String host, @NonNull String as) {
+        String tmpFile = format("%s/%s-%s.txt", tmpDir, host, as);
         executeBashCommand(format(IPS_CMD, as, tmpFile));
         Path path = Paths.get(tmpFile);
         Set<String> ips = new HashSet<>();

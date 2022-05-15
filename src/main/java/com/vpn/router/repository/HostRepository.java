@@ -1,6 +1,6 @@
 package com.vpn.router.repository;
 
-import com.vpn.router.model.Domain;
+import com.vpn.router.model.Host;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,12 +13,12 @@ import java.sql.Timestamp;
 
 @Repository
 @Transactional
-public interface DomainRepository
-        extends JpaRepository<Domain, Long>, JpaSpecificationExecutor<Domain> {
+public interface HostRepository
+        extends JpaRepository<Host, Long>, JpaSpecificationExecutor<Host> {
 
     @EntityGraph(attributePaths = {"routes"})
-    void deleteByName(@NotNull String name);
+    void deleteByHostname(@NotNull String name);
 
-    @Query("UPDATE Domain d SET d.isEnabled = :isEnabled, d.updatedAt = :updatedAt WHERE d.id = :id")
+    @Query("UPDATE Host h SET h.isEnabled = :isEnabled, h.updatedAt = :updatedAt WHERE h.id = :id")
     void updateIsEnabled(Long id, Boolean isEnabled, Timestamp updatedAt);
 }

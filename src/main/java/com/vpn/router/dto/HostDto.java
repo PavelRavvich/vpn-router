@@ -8,13 +8,13 @@ import java.time.LocalDateTime;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DomainResponse {
+public class HostDto {
 
     @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("domain")
-    private String domain;
+    @JsonProperty("hostname")
+    private String hostname;
 
     @JsonProperty("isEnabled")
     private Boolean isEnabled;

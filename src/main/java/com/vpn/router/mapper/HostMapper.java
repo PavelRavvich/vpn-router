@@ -1,7 +1,7 @@
 package com.vpn.router.mapper;
 
-import com.vpn.router.dto.DomainResponse;
-import com.vpn.router.model.Domain;
+import com.vpn.router.dto.HostDto;
+import com.vpn.router.model.Host;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 
@@ -9,6 +9,6 @@ import org.mapstruct.Mapper;
         uses = {DateMapper.class},
         injectionStrategy = InjectionStrategy.CONSTRUCTOR
 )
-public interface DomainMapper {
-    DomainResponse domainToDomainResponse(Domain domain);
+public interface HostMapper {
+    HostDto hostToHostDto(Host host);
 }

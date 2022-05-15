@@ -1,6 +1,6 @@
 package com.vpn.router.repository;
 
-import com.vpn.router.model.Domain;
+import com.vpn.router.model.Host;
 import com.vpn.router.model.Route;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,8 +14,8 @@ import java.util.List;
 @Transactional
 public interface RouteRepository extends JpaRepository<Route, Long>, JpaSpecificationExecutor<Route> {
 
-    List<Route> findAllByDomain(@NotNull Domain domain);
+    List<Route> findAllByHost(@NotNull Host host);
 
-    void deleteByDomain(@NotNull Domain domain);
+    void deleteByHost(@NotNull Host host);
 
 }
