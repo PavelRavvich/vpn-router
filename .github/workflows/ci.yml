@@ -4,10 +4,14 @@ on:
   push:
     branches:
       - 'prod'
+      - 'test'
+      - 'dev'
 
   workflow_dispatch:
     branches:
       - 'prod'
+      - 'test'
+      - 'dev'
 
 jobs:
   build:
