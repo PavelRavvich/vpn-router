@@ -45,7 +45,7 @@ public class BashServiceImpl implements BashService {
     @SneakyThrows
     public List<String> getRoutesByHost(@NonNull String hostname) {
         Set<String> addresses = getAddressesByHost(hostname);
-        log.debug("Host: {}, has {} routes", hostname, addresses.size());
+        log.debug("Host: {}, has {} IPs", hostname, addresses.size());
         return addresses.stream()
                 .map(this::getAutonomousSystem)
                 .flatMap(Collection::stream)
@@ -79,8 +79,9 @@ public class BashServiceImpl implements BashService {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             reader.lines().forEach(item ->
                     ips.add(item.replace("route:", "").trim()));
+        } finally {
+            Files.delete(path);
         }
-        Files.delete(path);
         return ips;
     }
 
