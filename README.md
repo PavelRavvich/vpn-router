@@ -1,4 +1,4 @@
-## Configure VPN Service like Bird *ip.conf
+## VPN Router
 
 Get all routes by Hostname (or URL) and write to *.conf file. 
 
