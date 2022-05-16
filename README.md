@@ -7,6 +7,20 @@ Configuration in `vpn-router/src/main/resources/application.properties`
 - `vpn.routes.config` - VPN config location with routes.
 - `vpn.reconfigure.bash.cmd` bash command for reconfigure VPN.
 
+
+#### Requirements:
+
+  - Java v17
+  - Gradle v7.4.2
+  - Postgres v12 
+    - Port `5432` 
+    - Database `vpn_router`
+
+#### Build: 
+- `$ service postgresql start`
+- `$ gradle clean build`
+- `$ java -jar vpn-router-0.0.1-SNAPSHOT.jar`
+
 ### API
 
 #### Get all registered hosts:
