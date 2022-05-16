@@ -3,16 +3,14 @@ package com.vpn.router.service;
 import com.vpn.router.dto.HostDto;
 import com.vpn.router.mapper.HostMapper;
 import com.vpn.router.model.Host;
-import com.vpn.router.model.Route;
 import com.vpn.router.repository.HostRepository;
+import com.vpn.router.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.net.URI;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.List;
@@ -27,6 +25,8 @@ public class HostServiceImpl implements HostService {
     private final HostMapper hostMapper;
 
     private final HostRepository hostRepository;
+
+    private final VpnConfigService vpnConfigService;
 
     private final RouteService routeService;
 
@@ -43,21 +43,18 @@ public class HostServiceImpl implements HostService {
     }
 
     @Override
-    @SneakyThrows
-    public void create(@NotNull String url) {
-        String hostname = new URI(url)
-                .getHost()
-                .replace("www.", "");
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+    public Long create(@NotNull String url) {
+        String hostname = StringUtils.toHost(url);
         Host host = hostRepository.save(
                 Host.builder()
-                        .createdAt(now)
-                        .isEnabled(true)
+                        .createdAt(new Timestamp(System.currentTimeMillis()))
                         .hostname(hostname)
+                        .isEnabled(true)
                         .build());
-
-        List<String> routes = bashService.getRoutesByHost(host);
+        List<String> routes = bashService.getRoutesByHost(hostname);
         routeService.saveAll(hostMapper.addressToRoute(routes, host));
+        vpnConfigService.reconfigure();
+        return host.getId();
     }
 
     @Override
@@ -66,32 +63,38 @@ public class HostServiceImpl implements HostService {
         Host host = hostRepository
                 .findById(hostId)
                 .orElseThrow(NoSuchElementException::new);
-        List<String> addresses = bashService.getRoutesByHost(host);
-        List<Route> routes = hostMapper.addressToRoute(addresses, host);
+        List<String> addresses = bashService
+                .getRoutesByHost(host.getHostname());
         routeService.deleteAllByHost(host);
-        routeService.saveAll(routes);
-        hostRepository.updateIsEnabled(hostId, true, new Timestamp(System.currentTimeMillis()));
+        routeService.saveAll(hostMapper.addressToRoute(addresses, host));
+        hostRepository.updateIsEnabled(hostId, true,
+                new Timestamp(System.currentTimeMillis()));
+        vpnConfigService.reconfigure();
     }
 
     @Override
     public void disable(@NotNull Long id) {
-        hostRepository.updateIsEnabled(id, false, new Timestamp(System.currentTimeMillis()));
+        hostRepository.updateIsEnabled(id, false,
+                new Timestamp(System.currentTimeMillis()));
+        vpnConfigService.reconfigure();
     }
 
     @Override
     public void enable(@NotNull Long id) {
-        hostRepository.updateIsEnabled(id, true, new Timestamp(System.currentTimeMillis()));
+        hostRepository.updateIsEnabled(id, true,
+                new Timestamp(System.currentTimeMillis()));
+        vpnConfigService.reconfigure();
     }
 
-
     @Override
-    @SneakyThrows
     @Transactional
     public void delete(@NotNull String url) {
-        URI uri = new URI(url);
+        String hostname = StringUtils.toHost(url);
         Host host = hostRepository
-                .findTopByHostname(uri.getHost())
+                .findTopByHostname(hostname)
                 .orElseThrow(NoSuchElementException::new);
-        hostRepository.deleteById(host.getId());
+        routeService.deleteAllByHost(host);
+        hostRepository.delete(host);
+        vpnConfigService.reconfigure();
     }
 }

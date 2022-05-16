@@ -8,7 +8,7 @@ public interface HostService {
 
     List<HostDto> list();
 
-    void create(String url);
+    Long create(String url);
 
     void delete(String url);
 

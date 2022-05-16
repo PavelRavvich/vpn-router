@@ -1,7 +1,6 @@
 package com.vpn.router.service;
 
 import com.vpn.router.model.Host;
-import com.vpn.router.model.Route;
 import com.vpn.router.validation.BashExecutionException;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -46,26 +45,15 @@ public class BashServiceImpl implements BashService {
 
     @Override
     @SneakyThrows
-    public List<String> getRoutesByHost(@NonNull Host host) {
-        Set<String> addresses = getAddressesByHost(host.getHostname());
-        log.debug("Host: {}, has {} routes", host.getHostname(), addresses.size());
-        updateVpnConfig(host.getHostname(), addresses);
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+    public List<String> getRoutesByHost(@NonNull String hostname) {
+        Set<String> addresses = getAddressesByHost(hostname);
+        log.debug("Host: {}, has {} routes", hostname, addresses.size());
         return addresses.stream()
                 .map(this::getAutonomousSystem)
                 .flatMap(Collection::stream)
-                .map(as -> getRoute(host.getHostname(), as))
+                .map(as -> getRoute(hostname, as))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
-    }
-
-    @SneakyThrows
-    public void updateVpnConfig(@NonNull String host, @NonNull Set<String> routes) {
-        String ips = String.join("\n", routes);
-        Files.write(
-                Paths.get(format(
-                        "./%s_routes", host.replace(".", "_"))
-                ), ips.getBytes());
     }
 
     public Set<String> getAddressesByHost(@NonNull String host) {

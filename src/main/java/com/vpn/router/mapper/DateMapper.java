@@ -1,14 +1,14 @@
 package com.vpn.router.mapper;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Component
 public class DateMapper {
-    public LocalDateTime asLocalDateTime(@NotNull Timestamp timestamp) {
-        return timestamp.toLocalDateTime();
+    public LocalDateTime asLocalDateTime(Timestamp timestamp) {
+        return Objects.nonNull(timestamp) ? timestamp.toLocalDateTime() : null;
     }
 }

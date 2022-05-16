@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -25,5 +26,10 @@ public class RouteServiceImpl implements RouteService {
     @Override
     public void deleteAllByHost(@NotNull Host host) {
         routeRepository.deleteAllByHost(host);
+    }
+
+    @Override
+    public List<Route> findAll() {
+        return routeRepository.findAll();
     }
 }

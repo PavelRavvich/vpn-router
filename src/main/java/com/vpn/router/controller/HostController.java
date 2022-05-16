@@ -28,9 +28,8 @@ public class HostController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Void> create(@NotNull @RequestBody @Valid Map<String, String> request) {
-        hostService.create(request.get("hostname"));
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, Long>> create(@NotNull @RequestBody @Valid Map<String, String> request) {
+        return ResponseEntity.ok(Map.of("id", hostService.create(request.get("url"))));
     }
 
     @PostMapping("/update")
