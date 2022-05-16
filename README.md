@@ -1,6 +1,6 @@
 ## VPN Router
 
-[![CI](https://github.com/PavelRavvich/vpn-router/actions/workflows/ci.yml/badge.svg?branch=prod)](https://github.com/PavelRavvich/vpn-router/actions/workflows/ci.yml)
+[![CI](https://github.com/PavelRavvich/vpn-router/actions/workflows/ci.yml/badge.svg)](https://github.com/PavelRavvich/vpn-router/actions/workflows/ci.yml)
 
 Get all routes by Hostname (or URL) and write to *.conf file. 
 
